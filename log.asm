@@ -4,18 +4,10 @@
 ;;; Programmers: Dvir Margalit and Tal Fein, 2026
 
 section .data
-fmt_posinf:
-	db `+∞\n\0`
-fmt_neginf:
-	db `-∞\n\0`
-fmt_nan:
-	db `NaN ("not a number")\n\0`
 fmt_frac:
-	db `%d/%d\n\0`
-fmt_int:
 	db `%d\n\0`
 fmt_usage:
-	db `Usage: program frac1 frac2,\nwhere frac can be nat or nat/nat\n\0`
+	db `Usage:\n		<program> <base> <number> <epsilon>\n\0`
 
 extern printf, fprintf, stderr, stdout, exit
 global main
@@ -162,21 +154,8 @@ main:
     mov rdi, qword [stderr]
     mov rbx, 1
 	jmp .print_and_exit
-.neg_inf:
-	mov rsi, fmt_neginf
-	jmp .printf_and_exit
-.pos_inf:
-	mov rsi, fmt_posinf
-	jmp .printf_and_exit
-.NaN:
-	mov rsi, fmt_nan
-	jmp .printf_and_exit
 .frac:
     mov rsi, fmt_frac
-	jmp .printf_and_exit
-.int:
-	mov rsi, fmt_int
-.printf_and_exit:
 	mov rdi, qword [stdout]
     mov rbx, 0
 .print_and_exit:
