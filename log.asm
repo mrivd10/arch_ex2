@@ -77,7 +77,7 @@ main:
 	;start activation frame
 	
 	; check_size_argv
-    cmp rdi, 3
+    cmp rdi, 4
     jne .usage
 
 .input_proccess:
