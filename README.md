@@ -1,12 +1,10 @@
-# first student
 ## Elior Hadad
-207198169
-talfein5@gmail.com
+* 213563349
+* Eliorhad@post.bgu.ac.il
 
-# Second student
 ## Dvir Margalit
-325119659
-dvirmarg@post.bgu.ac.il
+* 325119659
+* dvirmarg@post.bgu.ac.il
 
 ## status:
 * parser
