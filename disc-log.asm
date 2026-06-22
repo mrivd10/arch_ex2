@@ -4,96 +4,56 @@
 ;;; Programmers: Dvir Margalit and Elior Hadad, 2026
 
 section .data
-fmt_frac:
-	db `%d\n\0`
+fmt_ld:
+    db "%Lf", 0
+fmt_result:
+	db `%Lf\n\0`
 fmt_usage:
 	db `Usage:\n		<program> <base> <number> <epsilon>\n\0`
 
-extern printf, fprintf, stderr, stdout, exit
+extern sscanf, printf, fprintf, stderr, stdout, exit
 global main
 section .text
 
 log:
-		;start activation frame
-		push rbp
-		mov rbp, rsp
+	;start activation frame
+	push rbp
+	mov rbp, rsp
 
-		mov [rbp-8],  rdi        ; &a
-		mov [rbp-16], rsi        ; &b
-		mov [rbp-24], rdx        ; &epsilon
+	.log_1:				; a > b
+		fld tword [rsi]		; load b
+		fld tword [rdi]		; load a
+		fcomip st0, st1
+		fstp st0
+		jbe .log_2			; if a <= b, jump to log_2
+		xchg rdi, rsi		; swap a and b
+		call log
+		fld1
+		fdivp st0, st1 		; st0 = 1 / log_b(a)
+		jmp .log_done
+		
+	.log_2:				; b/a < 1 + /epsilon
+		fld tword [rsi]		; load b
+		fld tword [rdi]		; load a
+		fdivrp st0, st1		; st0 = b/a
+		fld1
+		fld tword [rdx]		; load epsilon
+		fadd st0, st1
+		fstp st1
+		fcomip st0, st1	    ; st0 = b/a
+		jbe .log_3			; if b/a <= 1 + epsilon, jump to log_3
+		fstp st0
+		fld1
+		jmp .log_done
 
-			.log_#1:				; a > b
-				cmp rsi, rdi
-				; TODO: first condition a > b, a exchange b, ret 1/log_a(b)
-				call log
+	.log_3:				; else
+		fstp tword [rsi]	; store b = b/a in memory
+		call log			; st0 = log_a(b/a)
+		fld1
+		fadd st0, st1
+		fstp st1
 
-			.log_#2:				; b/a < 1 + /epsilon
-				; TODO: second condition, ret 1
-				jmp log_done
-
-			.log_#3:				; else
-				; TODO: third condition, b = b/a, ret 1 + log_a(b)
-				call log
-
-			.log_done:
-				mov rsp, rbp
-				pop rbp
-				ret
-
-parse_arg:
-		push rbp
-		mov  rbp, rsp
-
-		xor rbx, rbx      	; numerator = 0
-		mov rcx, 1      	; denominator = 1
-		xor rdx, rdx		; sign = 0
-		cmp byte [rdi], '-'	; check for negative sign
-		jne .numerator_loop
-		inc rdi				; move past sign
-		inc rdx				; sign = 1
-
-	.numerator_loop:
-		movzx rax, byte [rdi]	; load current char
-		cmp rax, 0			; check for end of string
-		je .check_sign
-		cmp rax, '/'		; check for slash
-		je .denominator
-		cmp rax, '0'		; check for digit
-		jl main.usage
-		cmp rax, '9'
-		jg main.usage
-		sub rax, '0'		; convert char to digit
-		imul rbx, 10		; numerator *= 10
-		add rbx, rax 		; numerator += digit
-		inc rdi				; move to next char
-		jmp .numerator_loop
-
-	.denominator:
-		xor rcx, rcx
-		inc rdi					; move past slash
-		cmp byte [rdi], 0				; check for end of string
-		je main.usage
-
-	.denominator_loop:
-		movzx rax, byte [rdi]	; load current char
-		cmp rax, 0			; check for end of string
-		je .check_sign
-		cmp rax, '0'		; check for digit
-		jl main.usage
-		cmp rax, '9'
-		jg main.usage
-		sub rax, '0'		; convert char to digit
-		imul rcx, 10		; denominator *= 10
-		add rcx, rax 		; denominator += digit
-		inc rdi				; move to next char
-		jmp .denominator_loop
-
-	.check_sign:
-		cmp rdx, 0
-		je .done_parsing
-		imul rbx, -1
-
-	.done_parsing:
+	.log_done:
 		mov rsp, rbp
 		pop rbp
 		ret
@@ -107,17 +67,28 @@ main:
 		cmp rdi, 4					; check_size_argv
 		jne .usage
 		
-		mov rdi, [rsi + 8]	; argv[1]
-		call parse_arg
-		mov r8, rbx
+		mov r12, rsi		; parse base
+		mov rsi, fmt_ld
 		
-		mov rdi, [rsi + 16]	; argv[2]
-		call parse_arg
-		mov r10, rbx
+		mov rdi, [r12 + 8]	; argv[1]
+		xor rax, rax
+		call sscanf
+		cmp rax, 1
+		jne .usage
+		
+		mov rdi, [r12 + 16]	; argv[2]
+		xor rax, rax
+		call sscanf
+		cmp rax, 1
+		jne .usage
 
-		mov rdi, [rsi + 24]	; argv[3]
-		call parse_arg
-		mov r10, rbx
+		mov rdi, [r12 + 24]	; argv[3]
+		xor rax, rax
+		call sscanf
+		cmp rax, 1
+		jne .usage
+
+	
 
 	.usage:
 		mov rsi, fmt_usage
@@ -125,7 +96,7 @@ main:
 		mov rbx, 1
 		jmp .print_and_exit
 	.frac:
-		mov rsi, fmt_frac
+		mov rsi, fmt_result
 		mov rdi, qword [stdout]
 		mov rbx, 0
 	.print_and_exit:
