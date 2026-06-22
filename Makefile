@@ -1,10 +1,10 @@
-# Makefile for log
+# Makefile for disc-log
 
-all: log
+all: disc-log
 
-log: log.asm
-	nasm -g -f elf64 -l log.lst log.asm
-	gcc -g -m64 -no-pie -o log log.o
+disc-log: disc-log.asm
+	nasm -g -f elf64 -l disc-log.lst disc-log.asm
+	gcc -g -m64 -no-pie -o disc-log disc-log.o
 
 clean:
-	rm log.o
+	rm disc-log.o
