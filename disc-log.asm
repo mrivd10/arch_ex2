@@ -7,7 +7,7 @@ section .data
 fmt_ld:
     db "%Lf", 0
 fmt_result:
-	db `log_{%.0Lf}(%.0Lf) = %.18Lf\n\0`
+	db `log_{%.18Lg}(%.18Lg) = %.18Lg\n\0`
 fmt_usage:
 	db `Usage:\n		<program> <base> <number> <epsilon>\n\0`
 
