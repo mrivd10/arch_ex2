@@ -14,10 +14,14 @@ program base number epsilon
 log_{a}(b) = res
 
 ## status:
-* (done) parser
+* (done) parser ; extern sscanf used
 * (done) implement log algorithm
-* (done) figure out the callback of log
-* (done) make a, b integers
-* (done) debug inacurate answer
-* (done) make long with 16 characters after the dec-point
-* format 3.0000000000000000 --> 3
+* (done) figure out the callback of log ; keep answer in st0
+* (done) make a, b integers ; %Lf --> %.0Lf
+* (done) debug inacurate answer ; fdivp --> fdivrp
+* (done) make long with 16 characters after the dec-point ; %Lf --> %.18Lf format
+* (done) format 3.0000000000000000 --> 3 ; %.18Lf --> %.18Lg format
+* PASSED THE PDF TESTS --> Done
+* check for epsilon < 1e-19 --> usage: (too small, without validation dumping core) (not implemented, not required)
+
+### finished!!!
