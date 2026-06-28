@@ -6,7 +6,17 @@
 * 325119659
 * dvirmarg@post.bgu.ac.il
 
+## goal
+implementation of log{a}(b) algorithm in .asm
+### input:
+program base number epsilon
+### output:
+log_{a}(b) = res
+
 ## status:
-* parser
-* implement log algorithm
-* figure out the callback of log
+* (done) parser
+* (done) implement log algorithm
+* (done) figure out the callback of log
+* make a, b integers
+* debug inacurate answer
+* make long with 16 characters after the dec-point
