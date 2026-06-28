@@ -14,6 +14,7 @@ fmt_usage:
 section .bss
 	a:       resb 16
 	b:       resb 16
+	b_print: resb 16
 	epsilon: resb 16
 	result:  resb 16
 
@@ -25,8 +26,9 @@ log:
 	;start activation frame
 	push rbp
 	mov rbp, rsp
+	sub rsp, 32
 
-	.log_1:				; a > b
+	.log_1:					; a > b
 		fld tword [rsi]		; load b
 		fld tword [rdi]		; load a
 		fcomip st0, st1
@@ -35,13 +37,13 @@ log:
 		xchg rdi, rsi		; swap a and b
 		call log
 		fld1
-		fdivp st0, st1 		; st0 = 1 / log_b(a)
+		fdivp st1 			; st0 = 1 / log_b(a)
 		jmp .log_done
 		
-	.log_2:				; b/a < 1 + /epsilon
+	.log_2:					; b/a < 1 + /epsilon
 		fld tword [rsi]		; load b
 		fld tword [rdi]		; load a
-		fdivrp st0, st1		; st0 = b/a
+		fdivp st1			; st0 = b/a
 		fld1
 		fld tword [rdx]		; load epsilon
 		fadd st0, st1
@@ -52,8 +54,9 @@ log:
 		fld1
 		jmp .log_done
 
-	.log_3:				; else
-		fstp tword [rsi]	; store b = b/a in memory
+	.log_3:					; else
+		fstp tword [rbp-16]	; store b = b/a in memory
+		lea rsi, [rbp-16]	; load address of b/a
 		call log			; st0 = log_a(b/a)
 		fld1
 		fadd st0, st1
@@ -68,59 +71,79 @@ main:
 		;start activation frame
 		push rbp
 		mov rbp, rsp
-		sub rsp, 48 		; allocate space for local variables
+		push r12
+		sub rsp, 8 
+		sub rsp, 64 		; allocate space for local variables
 
 	.input_proccess:
 		cmp rdi, 4					; check_size_argv
 		jne .usage
-		
 		mov r12, rsi		; parse base
-		mov rsi, fmt_ld
 		
+		lea rsi, [rel fmt_ld]
 		mov rdi, [r12 + 8]	; argv[1]
+		lea rdx, [rel a]
 		xor rax, rax
 		call sscanf
 		cmp rax, 1
 		jne .usage
 		
+		lea rsi, [rel fmt_ld]
 		mov rdi, [r12 + 16]	; argv[2]
+		lea rdx, [rel b]
 		xor rax, rax
 		call sscanf
 		cmp rax, 1
 		jne .usage
 
+		lea rsi, [rel fmt_ld]
 		mov rdi, [r12 + 24]	; argv[3]
+		lea rdx, [rel epsilon]
 		xor rax, rax
 		call sscanf
 		cmp rax, 1
 		jne .usage
 
 	.body:
+		fld  tword [rel b]
+		fstp tword [rel b_print]
+
 		lea rdi, [rel a]
 		lea rsi, [rel b]
 		lea rdx, [rel epsilon]
 		call log
 		fstp tword [result]
-		jmp .frac
+		
+		fld tword [a]
+		fstp tword [rsp]
+
+		fld tword [b_print]
+		fstp tword [rsp + 16]
+
+		fld tword [result]
+		fstp tword [rsp + 32]
+
+		jmp .res
 
 	.usage:
 		lea rsi, [rel fmt_usage]
 		mov rdi, qword [stderr]
 		mov rbx, 1
 		jmp .print_and_exit
-	.frac:
+	.res:
 		lea rsi, [rel fmt_result]
 		mov rdi, qword [stdout]
-		mov rbx, 0
+		xor rbx, rbx
 	.print_and_exit:
 		xor rax, rax
 		call fprintf
 		mov rdi, rbx
 
 		;end of activation frame
+		add rsp, 8
+    	pop r12
 		mov rsp, rbp
 		pop rbp
-
 		call exit
 		
 section .note.GNU-stack noalloc noexec
