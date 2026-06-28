@@ -7,4 +7,4 @@ disc-log: disc-log.asm
 	gcc -g -m64 -no-pie -o disc-log disc-log.o
 
 clean:
-	rm disc-log.o
+	rm -rf disc-log.o disc-log disc-log.lst disc-log.s
