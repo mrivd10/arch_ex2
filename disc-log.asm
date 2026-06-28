@@ -7,14 +7,13 @@ section .data
 fmt_ld:
     db "%Lf", 0
 fmt_result:
-	db `log_{%Lf}(%Lf) = %Lf\n\0`
+	db `log_{%.0Lf}(%.0Lf) = %.18Lf\n\0`
 fmt_usage:
 	db `Usage:\n		<program> <base> <number> <epsilon>\n\0`
 
 section .bss
 	a:       resb 16
 	b:       resb 16
-	b_print: resb 16
 	epsilon: resb 16
 	result:  resb 16
 
@@ -37,7 +36,7 @@ log:
 		xchg rdi, rsi		; swap a and b
 		call log
 		fld1
-		fdivp st1 			; st0 = 1 / log_b(a)
+		fdivrp st1 			; st0 = 1 / log_b(a)
 		jmp .log_done
 		
 	.log_2:					; b/a < 1 + /epsilon
@@ -105,9 +104,6 @@ main:
 		jne .usage
 
 	.body:
-		fld  tword [rel b]
-		fstp tword [rel b_print]
-
 		lea rdi, [rel a]
 		lea rsi, [rel b]
 		lea rdx, [rel epsilon]
@@ -117,7 +113,7 @@ main:
 		fld tword [a]
 		fstp tword [rsp]
 
-		fld tword [b_print]
+		fld tword [b]
 		fstp tword [rsp + 16]
 
 		fld tword [result]
